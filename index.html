@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Core 2.5D Engine</title>
+    
+    <!-- Fonte Gótica -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a050f;
+            background-image: radial-gradient(circle at 20% 30%, #1a1020 0%, #0a050f 90%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Cinzel', 'Courier New', monospace;
+        }
+        
+        canvas {
+            border: 2px solid #5a4a6a;
+            box-shadow: 0 0 30px rgba(170, 130, 200, 0.3);
+            border-radius: 8px;
+            image-rendering: crisp-edges;
+        }
+        
+        .error-message {
+            position: absolute;
+            bottom: 20px;
+            color: #c88;
+            background: #1a0a1a;
+            padding: 10px;
+            border-left: 4px solid #a55;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <!-- IMPORTANTE: Módulo principal com tratamento de erro -->
+    <script type="module">
+        import { Engine } from './js/engine.js';
+
+        async function iniciarJogo() {
+            try {
+                const canvas = document.getElementById('gameCanvas');
+                if (!canvas) throw new Error('Canvas não encontrado');
+                
+                const ctx = canvas.getContext('2d');
+                if (!ctx) throw new Error('Contexto 2D não disponível');
+                
+                console.log('🎮 Iniciando Shadow Core Engine...');
+                
+                const engine = new Engine(ctx);
+                await engine.start();
+                
+                console.log('✅ Engine inicializada com sucesso');
+                
+                // Expõe para debug (opcional)
+                window.engine = engine;
+                
+            } catch (error) {
+                console.error('❌ Erro fatal:', error);
+                
+                // Mostra erro no canvas
+                const canvas = document.getElementById('gameCanvas');
+                const ctx = canvas?.getContext('2d');
+                if (ctx) {
+                    ctx.fillStyle = '#1a0a1a';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#c88';
+                    ctx.font = '14px "Courier New", monospace';
+                    ctx.fillText('ERRO: ' + error.message, 50, 100);
+                    ctx.fillText('Verifique o console (F12)', 50, 140);
+                }
+            }
+        }
+
+        // Executar quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', iniciarJogo);
+        } else {
+            iniciarJogo();
+        }
+    </script>
+</body>
+</html>
