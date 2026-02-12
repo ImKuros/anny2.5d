@@ -155,18 +155,76 @@
         }
     }
 </style>
+<!-- JOYSTICK VIRTUAL — ESTILO ARCADE -->
+<div id="joystick-container">
+    <div id="joystick-base">
+        <div id="joystick-handle"></div>
+    </div>
+</div>
+
+<style>
+    #joystick-container {
+        position: fixed;
+        bottom: 40px;
+        left: 40px;
+        width: 120px;
+        height: 120px;
+        z-index: 10000;
+        pointer-events: none;
+        display: none; /* Só aparece em mobile */
+    }
+
+    #joystick-base {
+        width: 120px;
+        height: 120px;
+        background: rgba(20, 10, 30, 0.7);
+        backdrop-filter: blur(4px);
+        border-radius: 50%;
+        border: 2px solid rgba(176, 122, 192, 0.8);
+        box-shadow: 0 0 20px rgba(176, 122, 192, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: auto;
+        touch-action: none;
+    }
+
+    #joystick-handle {
+        width: 50px;
+        height: 50px;
+        background: radial-gradient(circle at 30% 30%, #ca8aca, #7a4a8a);
+        border-radius: 50%;
+        border: 2px solid #e0b0e0;
+        box-shadow: 0 0 15px #b07ac0;
+        transition: transform 0.02s;
+        pointer-events: none;
+    }
+
+    /* Só aparece em telas pequenas (mobile) */
+    @media (max-width: 1024px) {
+        #joystick-container {
+            display: block;
+        }
+    }
+</style>
 
 <script>
-    // Sistema de controles mobile
     (function() {
-        // Simular teclas WASD
-        const keyMap = {
-            'w': 'w',
-            'a': 'a',
-            's': 's',
-            'd': 'd'
-        };
-        
+        // ========== JOYSTICK VIRTUAL ==========
+        const container = document.getElementById('joystick-container');
+        const base = document.getElementById('joystick-base');
+        const handle = document.getElementById('joystick-handle');
+
+        if (!base || !handle) return;
+
+        let active = false;
+        let startX = 0, startY = 0;
+        let currentX = 0, currentY = 0;
+        const maxDist = 40; // distância máxima que o handle pode se mover
+
+        // Simulação de teclas WASD
+        const keyState = { w: false, a: false, s: false, d: false };
+
         function dispatchKey(key, type) {
             const event = new KeyboardEvent(type, {
                 key: key,
@@ -177,52 +235,110 @@
             });
             document.dispatchEvent(event);
         }
-        
-        // Adicionar eventos aos botões
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('.control-btn');
-            
-            buttons.forEach(btn => {
-                const key = btn.dataset.key;
-                
-                // Touch events para mobile
-                btn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    dispatchKey(key, 'keydown');
-                    btn.style.background = '#b07ac0';
-                });
-                
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    dispatchKey(key, 'keyup');
-                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
-                });
-                
-                btn.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    dispatchKey(key, 'keyup');
-                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
-                });
-                
-                // Mouse events para teste no desktop
-                btn.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    dispatchKey(key, 'keydown');
-                    btn.style.background = '#b07ac0';
-                });
-                
-                btn.addEventListener('mouseup', (e) => {
-                    e.preventDefault();
-                    dispatchKey(key, 'keyup');
-                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
-                });
-                
-                btn.addEventListener('mouseleave', (e) => {
-                    dispatchKey(key, 'keyup');
-                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
-                });
-            });
+
+        function updateKeysFromVector(dx, dy) {
+            // Normaliza
+            const len = Math.sqrt(dx*dx + dy*dy);
+            if (len > 0) {
+                dx /= len;
+                dy /= len;
+            }
+
+            // Deadzone
+            const deadzone = 0.2;
+            const newW = dy < -deadzone;
+            const newS = dy > deadzone;
+            const newA = dx < -deadzone;
+            const newD = dx > deadzone;
+
+            // Disparar keydown/keyup apenas quando mudar o estado
+            if (newW !== keyState.w) {
+                dispatchKey('w', newW ? 'keydown' : 'keyup');
+                keyState.w = newW;
+            }
+            if (newS !== keyState.s) {
+                dispatchKey('s', newS ? 'keydown' : 'keyup');
+                keyState.s = newS;
+            }
+            if (newA !== keyState.a) {
+                dispatchKey('a', newA ? 'keydown' : 'keyup');
+                keyState.a = newA;
+            }
+            if (newD !== keyState.d) {
+                dispatchKey('d', newD ? 'keydown' : 'keyup');
+                keyState.d = newD;
+            }
+        }
+
+        function resetKeys() {
+            if (keyState.w) dispatchKey('w', 'keyup');
+            if (keyState.s) dispatchKey('s', 'keyup');
+            if (keyState.a) dispatchKey('a', 'keyup');
+            if (keyState.d) dispatchKey('d', 'keyup');
+            keyState.w = keyState.s = keyState.a = keyState.d = false;
+        }
+
+        function handleStart(e) {
+            e.preventDefault();
+            active = true;
+            const rect = base.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            startX = rect.left + rect.width / 2;
+            startY = rect.top + rect.height / 2;
+            currentX = touch.clientX;
+            currentY = touch.clientY;
+            updateJoystickPosition();
+        }
+
+        function handleMove(e) {
+            if (!active) return;
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            currentX = touch.clientX;
+            currentY = touch.clientY;
+            updateJoystickPosition();
+        }
+
+        function handleEnd(e) {
+            e.preventDefault();
+            active = false;
+            // Voltar ao centro
+            handle.style.transform = `translate(0px, 0px)`;
+            resetKeys();
+        }
+
+        function updateJoystickPosition() {
+            if (!active) return;
+
+            let dx = currentX - startX;
+            let dy = currentY - startY;
+            const distance = Math.sqrt(dx*dx + dy*dy);
+
+            if (distance > maxDist) {
+                dx = (dx / distance) * maxDist;
+                dy = (dy / distance) * maxDist;
+            }
+
+            handle.style.transform = `translate(${dx}px, ${dy}px)`;
+
+            // Normaliza para -1..1
+            const normX = dx / maxDist;
+            const normY = dy / maxDist;
+            updateKeysFromVector(normX, normY);
+        }
+
+        // Eventos touch/mouse
+        base.addEventListener('touchstart', handleStart, { passive: false });
+        base.addEventListener('touchmove', handleMove, { passive: false });
+        base.addEventListener('touchend', handleEnd);
+        base.addEventListener('touchcancel', handleEnd);
+
+        // Suporte para mouse (teste no desktop)
+        base.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', (e) => {
+            if (active) handleMove(e);
         });
+        window.addEventListener('mouseup', handleEnd);
     })();
 </script>
 </body>
