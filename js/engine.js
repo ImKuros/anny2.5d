@@ -13,52 +13,35 @@ export class Engine {
         this.lastTime = 0;
         this.deltaTime = 0;
         
-        // Inicializa componentes básicos
         this.world = new World(30, 30);
         this.input = new Input();
         this.camera = new Camera(this.canvas.width, this.canvas.height);
         this.renderer = new Renderer(this.ctx, this.camera);
-        this.spriteLoader = new SpriteLoader();
+        this.spriteLoader = new SpriteLoader('assets/player/');
         
-        // 🚨 FIX: Player criado DEPOIS que tudo existe
         this.player = null;
-        
         this.initialized = false;
     }
     
     async start() {
+        console.log('⚙️ [ENGINE] Inicializando...');
+        
         try {
-            console.log('⚙️ Inicializando Shadow Core...');
-            
-            // 1. Carrega sprites (fallback)
             await this.spriteLoader.load();
+            this.spriteLoader.diagnose();
             
-            // 2. 🚨 CRIA PLAYER SOMENTE AGORA
             this.player = new Player(400, 300);
-            
-            // 3. Configura dependências do player
             this.player.setSpriteLoader(this.spriteLoader);
             this.player.setInput(this.input);
             
-            // 4. Adiciona ao mundo
             this.world.addEntity(this.player);
             
-            // 5. Pronto
             this.initialized = true;
-            console.log('✅ Engine pronta. Player criado:', this.player);
+            console.log('✅ [ENGINE] Pronta.');
             
-            // Inicia o loop
             requestAnimationFrame(this.gameLoop.bind(this));
-            
         } catch (error) {
-            console.error('❌ Erro ao iniciar engine:', error);
-            
-            // 🚨 FIX: Fallback extremo - cria player mesmo com erro
-            this.player = new Player(400, 300);
-            this.world.addEntity(this.player);
-            this.initialized = true;
-            
-            requestAnimationFrame(this.gameLoop.bind(this));
+            console.error('❌ [ENGINE] Erro fatal:', error);
         }
     }
     
@@ -68,18 +51,13 @@ export class Engine {
             return;
         }
         
-        // Delta time
         this.deltaTime = (currentTime - this.lastTime) / 1000;
         if (this.deltaTime > 0.1) this.deltaTime = 0.016;
         this.lastTime = currentTime;
         
-        // Update
         this.update(this.deltaTime);
-        
-        // Render
         this.render();
         
-        // Próximo frame
         requestAnimationFrame(this.gameLoop.bind(this));
     }
     
@@ -89,13 +67,8 @@ export class Engine {
     }
     
     render() {
-        // Limpa tela com fundo escuro
-        this.ctx.fillStyle = '#0a0a14';
+        this.ctx.fillStyle = '#1a1e2a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Renderiza mundo
-        if (this.renderer && this.world) {
-            this.renderer.renderWorld(this.world);
-        }
+        this.renderer.renderWorld(this.world);
     }
 }
