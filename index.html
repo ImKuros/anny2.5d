@@ -87,5 +87,143 @@
             iniciarJogo();
         }
     </script>
+    <!-- CONTROLES MOBILE — SIMPLES E FUNCIONAL -->
+<div id="mobile-controls">
+    <div class="control-grid">
+        <button class="control-btn" data-key="w">▲</button>
+        <div></div>
+        <button class="control-btn" data-key="a">◀</button>
+        <button class="control-btn" data-key="s">▼</button>
+        <button class="control-btn" data-key="d">▶</button>
+    </div>
+</div>
+
+<style>
+    #mobile-controls {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 1000;
+    }
+    
+    .control-grid {
+        display: grid;
+        grid-template-columns: 70px 70px 70px;
+        grid-template-rows: 70px 70px;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 15px;
+        border-radius: 20px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        pointer-events: auto;
+    }
+    
+    .control-btn {
+        width: 70px;
+        height: 70px;
+        background: rgba(30, 20, 40, 0.9);
+        border: 2px solid #b07ac0;
+        border-radius: 15px;
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 15px rgba(176, 122, 192, 0.3);
+        transition: all 0.05s ease;
+        cursor: pointer;
+        user-select: none;
+        touch-action: manipulation;
+    }
+    
+    .control-btn:active {
+        background: #b07ac0;
+        transform: scale(0.9);
+        box-shadow: 0 0 25px #ca8aca;
+    }
+    
+    /* Esconder controles no desktop */
+    @media (min-width: 1024px) {
+        #mobile-controls {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // Sistema de controles mobile
+    (function() {
+        // Simular teclas WASD
+        const keyMap = {
+            'w': 'w',
+            'a': 'a',
+            's': 's',
+            'd': 'd'
+        };
+        
+        function dispatchKey(key, type) {
+            const event = new KeyboardEvent(type, {
+                key: key,
+                code: `Key${key.toUpperCase()}`,
+                keyCode: key.charCodeAt(0) - 32,
+                which: key.charCodeAt(0) - 32,
+                bubbles: true
+            });
+            document.dispatchEvent(event);
+        }
+        
+        // Adicionar eventos aos botões
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.control-btn');
+            
+            buttons.forEach(btn => {
+                const key = btn.dataset.key;
+                
+                // Touch events para mobile
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    dispatchKey(key, 'keydown');
+                    btn.style.background = '#b07ac0';
+                });
+                
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    dispatchKey(key, 'keyup');
+                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
+                });
+                
+                btn.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    dispatchKey(key, 'keyup');
+                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
+                });
+                
+                // Mouse events para teste no desktop
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    dispatchKey(key, 'keydown');
+                    btn.style.background = '#b07ac0';
+                });
+                
+                btn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    dispatchKey(key, 'keyup');
+                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
+                });
+                
+                btn.addEventListener('mouseleave', (e) => {
+                    dispatchKey(key, 'keyup');
+                    btn.style.background = 'rgba(30, 20, 40, 0.9)';
+                });
+            });
+        });
+    })();
+</script>
 </body>
 </html>
