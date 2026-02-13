@@ -3,7 +3,7 @@ import { Player } from './player.js';
 import { Input } from './input.js';
 import { Camera } from './camera.js';
 import { Renderer } from './renderer.js';
-import { SpriteLoader } from './spriteLoader.js';
+import { VideoLoader } from './videoLoader.js';  // ← ALTERADO
 
 export class Engine {
     constructor(ctx) {
@@ -17,7 +17,7 @@ export class Engine {
         this.input = new Input();
         this.camera = new Camera(this.canvas.width, this.canvas.height);
         this.renderer = new Renderer(this.ctx, this.camera);
-        this.spriteLoader = new SpriteLoader('assets/player/');
+        this.videoLoader = new VideoLoader('assets/player/');  // ← NOVO
         
         this.player = null;
         this.initialized = false;
@@ -27,11 +27,11 @@ export class Engine {
         console.log('⚙️ [ENGINE] Inicializando...');
         
         try {
-            await this.spriteLoader.load();
-            this.spriteLoader.diagnose();
+            await this.videoLoader.load();          // ← CARREGA VÍDEOS
+            this.videoLoader.diagnose();
             
             this.player = new Player(400, 300);
-            this.player.setSpriteLoader(this.spriteLoader);
+            this.player.setVideoLoader(this.videoLoader);  // ← CONECTA
             this.player.setInput(this.input);
             
             this.world.addEntity(this.player);
