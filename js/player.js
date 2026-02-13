@@ -5,14 +5,14 @@ export class Player extends Entity {
         super(x, y);
         
         /* === CONFIGURAÇÕES === */
-        this.speed = 200;
+        this.speed = 100;
         this.input = null;
         this.spriteLoader = null;
         
         /* === IDENTIDADE === */
         this.name = 'MEU PERSONAGEM';
-        this.width = 34;
-        this.height = 54;
+        this.width = 174;
+        this.height = 194;
         
         /* === ESTADOS === */
         this.direction = 's';
@@ -28,7 +28,7 @@ export class Player extends Entity {
         /* === ANIMAÇÃO WALK — 8 FRAMES (4 DIREÇÕES) === */
         this.animationFrame = 0;
         this.animationTimer = 0;
-        this.frameSpeed = 1.30;     // 180ms — suave para 8 frames
+        this.frameSpeed = 1.10;     // 180ms — suave para 8 frames
         this.maxFrames = 8;         // ← AGORA 8 FRAMES PARA CAMINHADA
     }
     
