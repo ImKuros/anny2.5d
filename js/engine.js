@@ -3,7 +3,7 @@ import { Player } from './player.js';
 import { Input } from './input.js';
 import { Camera } from './camera.js';
 import { Renderer } from './renderer.js';
-import { VideoLoader } from './videoLoader.js';  // ← ALTERADO
+import { SpriteLoader } from './spriteLoader.js';
 
 export class Engine {
     constructor(ctx) {
@@ -17,7 +17,7 @@ export class Engine {
         this.input = new Input();
         this.camera = new Camera(this.canvas.width, this.canvas.height);
         this.renderer = new Renderer(this.ctx, this.camera);
-        this.videoLoader = new VideoLoader('assets/player/');  // ← NOVO
+        this.spriteLoader = new SpriteLoader('assets/player/');
         
         this.player = null;
         this.initialized = false;
@@ -27,11 +27,11 @@ export class Engine {
         console.log('⚙️ [ENGINE] Inicializando...');
         
         try {
-            await this.videoLoader.load();          // ← CARREGA VÍDEOS
-            this.videoLoader.diagnose();
+            await this.spriteLoader.load();
+            this.spriteLoader.diagnose();
             
             this.player = new Player(400, 300);
-            this.player.setVideoLoader(this.videoLoader);  // ← CONECTA
+            this.player.setSpriteLoader(this.spriteLoader);
             this.player.setInput(this.input);
             
             this.world.addEntity(this.player);
@@ -46,10 +46,7 @@ export class Engine {
     }
     
     gameLoop(currentTime) {
-        if (!this.initialized || !this.player) {
-            requestAnimationFrame(this.gameLoop.bind(this));
-            return;
-        }
+        if (!this.initialized || !this.player) return;
         
         this.deltaTime = (currentTime - this.lastTime) / 1000;
         if (this.deltaTime > 0.1) this.deltaTime = 0.016;
