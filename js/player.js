@@ -11,8 +11,8 @@ export class Player extends Entity {
         
         /* === IDENTIDADE === */
         this.name = 'MEU PERSONAGEM';
-        this.width = 34;
-        this.height = 54;
+        this.width = 94;
+        this.height = 124;
         
         /* === ESTADOS === */
         this.direction = 's';
@@ -22,14 +22,14 @@ export class Player extends Entity {
         /* === ANIMAÇÃO IDLE === */
         this.idleFrame = 0;
         this.idleTimer = 0;
-        this.idleSpeed = 0.20;      // 200ms
-        this.maxIdleFrames = 8;      // ← ajuste conforme seus PNGs
+        this.idleSpeed = 0.30;      // 200ms
+        this.maxIdleFrames = 30;      // ← ajuste conforme seus PNGs
         
         /* === ANIMAÇÃO WALK === */
         this.animationFrame = 0;
         this.animationTimer = 0;
-        this.frameSpeed = 0.18;      // 180ms
-        this.maxFrames = 8;           // ← ajuste conforme seus PNGs
+        this.frameSpeed = 1.0;      // 180ms
+        this.maxFrames = 30;           // ← ajuste conforme seus PNGs
         
         /* === EFEITOS VISUAIS === */
         this.glowIntensity = 0;
