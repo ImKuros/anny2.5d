@@ -9,6 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        /* Reset e base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -19,15 +26,102 @@
             align-items: center;
             min-height: 100vh;
             font-family: 'Cinzel', 'Courier New', monospace;
+            position: relative;
         }
-        
+
+        /* Tela de título */
+        #title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10, 5, 15, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            transition: opacity 0.8s ease;
+        }
+
+        #title-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #title-image {
+            max-width: 80%;
+            max-height: 60vh;
+            border: 3px solid #b07ac0;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(176, 122, 192, 0.6);
+            margin-bottom: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        #start-button {
+            background: linear-gradient(145deg, #2a1a2f, #1a0a1f);
+            border: 2px solid #b07ac0;
+            border-radius: 60px;
+            padding: 18px 60px;
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            font-weight: bold;
+            color: #f0e0ff;
+            text-shadow: 0 0 10px #ca8aca, 0 0 20px #b07ac0;
+            letter-spacing: 4px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(176, 122, 192, 0.5);
+            transition: all 0.3s ease;
+            outline: none;
+            backdrop-filter: blur(4px);
+        }
+
+        #start-button:hover {
+            background: linear-gradient(145deg, #3a2a3f, #2a1a2f);
+            border-color: #e0b0e0;
+            box-shadow: 0 0 50px #ca8aca;
+            transform: scale(1.05);
+            color: #ffffff;
+        }
+
+        #start-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Canvas do jogo */
         canvas {
             border: 2px solid #5a4a6a;
             box-shadow: 0 0 30px rgba(170, 130, 200, 0.3);
             border-radius: 8px;
             image-rendering: crisp-edges;
+            display: none; /* Inicialmente oculto */
         }
-        
+
+        /* Controles mobile e joystick (inicialmente ocultos) */
+        #mobile-controls, #joystick-container {
+            display: none;
+        }
+
+        /* Quando o jogo estiver ativo, exibe o canvas e os controles */
+        body.game-active canvas {
+            display: block;
+        }
+
+        body.game-active #mobile-controls,
+        body.game-active #joystick-container {
+            display: block;
+        }
+
+        /* Mensagem de erro */
         .error-message {
             position: absolute;
             bottom: 20px;
@@ -35,19 +129,97 @@
             background: #1a0a1a;
             padding: 10px;
             border-left: 4px solid #a55;
+            z-index: 3000;
+        }
+
+        /* Estilos do joystick (mantidos iguais) */
+        #joystick-container {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        #joystick-base {
+            width: 120px;
+            height: 120px;
+            background: rgba(20, 10, 30, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            border: 2px solid rgba(176, 122, 192, 0.8);
+            box-shadow: 0 0 20px rgba(176, 122, 192, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #joystick-handle {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, #ca8aca, #7a4a8a);
+            border-radius: 50%;
+            border: 2px solid #e0b0e0;
+            box-shadow: 0 0 15px #b07ac0;
+            transition: transform 0.02s;
+            pointer-events: none;
+        }
+
+        /* Responsividade: telas pequenas */
+        @media (max-width: 1024px) {
+            #joystick-container {
+                display: none; /* Será exibido quando game-active */
+            }
+            body.game-active #joystick-container {
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Tela de título -->
+    <div id="title-screen">
+        <!-- Substitua o caminho da imagem pela sua capa -->
+        <img src="assets/title.png" alt="Shadow Core" id="title-image">
+        <button id="start-button">Start</button>
+    </div>
+
+    <!-- Canvas do jogo -->
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    
-    <!-- IMPORTANTE: Módulo principal com tratamento de erro -->
+
+    <!-- Controles mobile (seus botões) -->
+    <div id="mobile-controls">
+        <div class="control-grid">
+            <div class="control-btn">W</div>
+            <div class="control-btn">A</div>
+            <div class="control-btn">S</div>
+            <div class="control-btn">D</div>
+        </div>
+    </div>
+
+    <!-- Joystick virtual -->
+    <div id="joystick-container">
+        <div id="joystick-base">
+            <div id="joystick-handle"></div>
+        </div>
+    </div>
+
     <script type="module">
         import { Engine } from './js/engine.js';
 
+        // Elementos da tela
+        const titleScreen = document.getElementById('title-screen');
+        const startBtn = document.getElementById('start-button');
+        const canvas = document.getElementById('gameCanvas');
+        const body = document.body;
+
+        // Função para iniciar o jogo
         async function iniciarJogo() {
             try {
-                const canvas = document.getElementById('gameCanvas');
                 if (!canvas) throw new Error('Canvas não encontrado');
                 
                 const ctx = canvas.getContext('2d');
@@ -67,9 +239,8 @@
                 console.error('❌ Erro fatal:', error);
                 
                 // Mostra erro no canvas
-                const canvas = document.getElementById('gameCanvas');
-                const ctx = canvas?.getContext('2d');
-                if (ctx) {
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
                     ctx.fillStyle = '#1a0a1a';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = '#c88';
@@ -80,257 +251,138 @@
             }
         }
 
-        // Executar quando o DOM estiver pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', iniciarJogo);
-        } else {
+        // Quando o botão Start for clicado
+        startBtn.addEventListener('click', () => {
+            // Esconde a tela de título
+            titleScreen.classList.add('hidden');
+            
+            // Ativa o modo jogo (exibe canvas e controles)
+            body.classList.add('game-active');
+            
+            // Inicia a engine
             iniciarJogo();
-        }
-    </script>
-</div>
-
-<style>
-    #mobile-controls {
-        position: fixed;
-        bottom: 20px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: center;
-        pointer-events: none;
-        z-index: 1000;
-    }
-    
-    .control-grid {
-        display: grid;
-        grid-template-columns: 70px 70px 70px;
-        grid-template-rows: 70px 70px;
-        gap: 10px;
-        background: rgba(0, 0, 0, 0.6);
-        padding: 15px;
-        border-radius: 20px;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        pointer-events: auto;
-    }
-    
-    .control-btn {
-        width: 70px;
-        height: 70px;
-        background: rgba(30, 20, 40, 0.9);
-        border: 2px solid #b07ac0;
-        border-radius: 15px;
-        color: white;
-        font-size: 32px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 15px rgba(176, 122, 192, 0.3);
-        transition: all 0.05s ease;
-        cursor: pointer;
-        user-select: none;
-        touch-action: manipulation;
-    }
-    
-    .control-btn:active {
-        background: #b07ac0;
-        transform: scale(0.9);
-        box-shadow: 0 0 25px #ca8aca;
-    }
-    
-    /* Esconder controles no desktop */
-    @media (min-width: 1024px) {
-        #mobile-controls {
-            display: none;
-        }
-    }
-</style>
-<!-- JOYSTICK VIRTUAL — ESTILO ARCADE -->
-<div id="joystick-container">
-    <div id="joystick-base">
-        <div id="joystick-handle"></div>
-    </div>
-</div>
-
-<style>
-    #joystick-container {
-        position: fixed;
-        bottom: 40px;
-        left: 40px;
-        width: 120px;
-        height: 120px;
-        z-index: 10000;
-        pointer-events: none;
-        display: none; /* Só aparece em mobile */
-    }
-
-    #joystick-base {
-        width: 120px;
-        height: 120px;
-        background: rgba(20, 10, 30, 0.7);
-        backdrop-filter: blur(4px);
-        border-radius: 50%;
-        border: 2px solid rgba(176, 122, 192, 0.8);
-        box-shadow: 0 0 20px rgba(176, 122, 192, 0.4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        pointer-events: auto;
-        touch-action: none;
-    }
-
-    #joystick-handle {
-        width: 50px;
-        height: 50px;
-        background: radial-gradient(circle at 30% 30%, #ca8aca, #7a4a8a);
-        border-radius: 50%;
-        border: 2px solid #e0b0e0;
-        box-shadow: 0 0 15px #b07ac0;
-        transition: transform 0.02s;
-        pointer-events: none;
-    }
-
-    /* Só aparece em telas pequenas (mobile) */
-    @media (max-width: 1024px) {
-        #joystick-container {
-            display: block;
-        }
-    }
-</style>
-
-<script>
-    (function() {
-        // ========== JOYSTICK VIRTUAL ==========
-        const container = document.getElementById('joystick-container');
-        const base = document.getElementById('joystick-base');
-        const handle = document.getElementById('joystick-handle');
-
-        if (!base || !handle) return;
-
-        let active = false;
-        let startX = 0, startY = 0;
-        let currentX = 0, currentY = 0;
-        const maxDist = 40; // distância máxima que o handle pode se mover
-
-        // Simulação de teclas WASD
-        const keyState = { w: false, a: false, s: false, d: false };
-
-        function dispatchKey(key, type) {
-            const event = new KeyboardEvent(type, {
-                key: key,
-                code: `Key${key.toUpperCase()}`,
-                keyCode: key.charCodeAt(0) - 32,
-                which: key.charCodeAt(0) - 32,
-                bubbles: true
-            });
-            document.dispatchEvent(event);
-        }
-
-        function updateKeysFromVector(dx, dy) {
-            // Normaliza
-            const len = Math.sqrt(dx*dx + dy*dy);
-            if (len > 0) {
-                dx /= len;
-                dy /= len;
-            }
-
-            // Deadzone
-            const deadzone = 0.2;
-            const newW = dy < -deadzone;
-            const newS = dy > deadzone;
-            const newA = dx < -deadzone;
-            const newD = dx > deadzone;
-
-            // Disparar keydown/keyup apenas quando mudar o estado
-            if (newW !== keyState.w) {
-                dispatchKey('w', newW ? 'keydown' : 'keyup');
-                keyState.w = newW;
-            }
-            if (newS !== keyState.s) {
-                dispatchKey('s', newS ? 'keydown' : 'keyup');
-                keyState.s = newS;
-            }
-            if (newA !== keyState.a) {
-                dispatchKey('a', newA ? 'keydown' : 'keyup');
-                keyState.a = newA;
-            }
-            if (newD !== keyState.d) {
-                dispatchKey('d', newD ? 'keydown' : 'keyup');
-                keyState.d = newD;
-            }
-        }
-
-        function resetKeys() {
-            if (keyState.w) dispatchKey('w', 'keyup');
-            if (keyState.s) dispatchKey('s', 'keyup');
-            if (keyState.a) dispatchKey('a', 'keyup');
-            if (keyState.d) dispatchKey('d', 'keyup');
-            keyState.w = keyState.s = keyState.a = keyState.d = false;
-        }
-
-        function handleStart(e) {
-            e.preventDefault();
-            active = true;
-            const rect = base.getBoundingClientRect();
-            const touch = e.touches ? e.touches[0] : e;
-            startX = rect.left + rect.width / 2;
-            startY = rect.top + rect.height / 2;
-            currentX = touch.clientX;
-            currentY = touch.clientY;
-            updateJoystickPosition();
-        }
-
-        function handleMove(e) {
-            if (!active) return;
-            e.preventDefault();
-            const touch = e.touches ? e.touches[0] : e;
-            currentX = touch.clientX;
-            currentY = touch.clientY;
-            updateJoystickPosition();
-        }
-
-        function handleEnd(e) {
-            e.preventDefault();
-            active = false;
-            // Voltar ao centro
-            handle.style.transform = `translate(0px, 0px)`;
-            resetKeys();
-        }
-
-        function updateJoystickPosition() {
-            if (!active) return;
-
-            let dx = currentX - startX;
-            let dy = currentY - startY;
-            const distance = Math.sqrt(dx*dx + dy*dy);
-
-            if (distance > maxDist) {
-                dx = (dx / distance) * maxDist;
-                dy = (dy / distance) * maxDist;
-            }
-
-            handle.style.transform = `translate(${dx}px, ${dy}px)`;
-
-            // Normaliza para -1..1
-            const normX = dx / maxDist;
-            const normY = dy / maxDist;
-            updateKeysFromVector(normX, normY);
-        }
-
-        // Eventos touch/mouse
-        base.addEventListener('touchstart', handleStart, { passive: false });
-        base.addEventListener('touchmove', handleMove, { passive: false });
-        base.addEventListener('touchend', handleEnd);
-        base.addEventListener('touchcancel', handleEnd);
-
-        // Suporte para mouse (teste no desktop)
-        base.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', (e) => {
-            if (active) handleMove(e);
         });
-        window.addEventListener('mouseup', handleEnd);
-    })();
-</script>
+
+        // Código do joystick (igual ao seu, mas movido para dentro do módulo ou mantido global)
+        (function() {
+            const container = document.getElementById('joystick-container');
+            const base = document.getElementById('joystick-base');
+            const handle = document.getElementById('joystick-handle');
+
+            if (!base || !handle) return;
+
+            let active = false;
+            let startX = 0, startY = 0;
+            let currentX = 0, currentY = 0;
+            const maxDist = 40;
+
+            const keyState = { w: false, a: false, s: false, d: false };
+
+            function dispatchKey(key, type) {
+                const event = new KeyboardEvent(type, {
+                    key: key,
+                    code: `Key${key.toUpperCase()}`,
+                    keyCode: key.charCodeAt(0) - 32,
+                    which: key.charCodeAt(0) - 32,
+                    bubbles: true
+                });
+                document.dispatchEvent(event);
+            }
+
+            function updateKeysFromVector(dx, dy) {
+                const len = Math.sqrt(dx*dx + dy*dy);
+                if (len > 0) {
+                    dx /= len;
+                    dy /= len;
+                }
+
+                const deadzone = 0.2;
+                const newW = dy < -deadzone;
+                const newS = dy > deadzone;
+                const newA = dx < -deadzone;
+                const newD = dx > deadzone;
+
+                if (newW !== keyState.w) {
+                    dispatchKey('w', newW ? 'keydown' : 'keyup');
+                    keyState.w = newW;
+                }
+                if (newS !== keyState.s) {
+                    dispatchKey('s', newS ? 'keydown' : 'keyup');
+                    keyState.s = newS;
+                }
+                if (newA !== keyState.a) {
+                    dispatchKey('a', newA ? 'keydown' : 'keyup');
+                    keyState.a = newA;
+                }
+                if (newD !== keyState.d) {
+                    dispatchKey('d', newD ? 'keydown' : 'keyup');
+                    keyState.d = newD;
+                }
+            }
+
+            function resetKeys() {
+                if (keyState.w) dispatchKey('w', 'keyup');
+                if (keyState.s) dispatchKey('s', 'keyup');
+                if (keyState.a) dispatchKey('a', 'keyup');
+                if (keyState.d) dispatchKey('d', 'keyup');
+                keyState.w = keyState.s = keyState.a = keyState.d = false;
+            }
+
+            function handleStart(e) {
+                e.preventDefault();
+                active = true;
+                const rect = base.getBoundingClientRect();
+                const touch = e.touches ? e.touches[0] : e;
+                startX = rect.left + rect.width / 2;
+                startY = rect.top + rect.height / 2;
+                currentX = touch.clientX;
+                currentY = touch.clientY;
+                updateJoystickPosition();
+            }
+
+            function handleMove(e) {
+                if (!active) return;
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                currentX = touch.clientX;
+                currentY = touch.clientY;
+                updateJoystickPosition();
+            }
+
+            function handleEnd(e) {
+                e.preventDefault();
+                active = false;
+                handle.style.transform = `translate(0px, 0px)`;
+                resetKeys();
+            }
+
+            function updateJoystickPosition() {
+                if (!active) return;
+
+                let dx = currentX - startX;
+                let dy = currentY - startY;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+
+                if (distance > maxDist) {
+                    dx = (dx / distance) * maxDist;
+                    dy = (dy / distance) * maxDist;
+                }
+
+                handle.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                const normX = dx / maxDist;
+                const normY = dy / maxDist;
+                updateKeysFromVector(normX, normY);
+            }
+
+            base.addEventListener('touchstart', handleStart, { passive: false });
+            base.addEventListener('touchmove', handleMove, { passive: false });
+            base.addEventListener('touchend', handleEnd);
+            base.addEventListener('touchcancel', handleEnd);
+            base.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', (e) => { if (active) handleMove(e); });
+            window.addEventListener('mouseup', handleEnd);
+        })();
+    </script>
 </body>
 </html>

@@ -11,8 +11,8 @@ export class Player extends Entity {
         
         /* === IDENTIDADE === */
         this.name = 'MEU PERSONAGEM';
-        this.width = 94;
-        this.height = 124;
+        this.width = 124;
+        this.height = 154;
         
         /* === ESTADOS === */
         this.direction = 's';
@@ -22,7 +22,7 @@ export class Player extends Entity {
         /* === ANIMAÇÃO IDLE === */
         this.idleFrame = 0;
         this.idleTimer = 0;
-        this.idleSpeed = 0.30;      // 200ms
+        this.idleSpeed = 1.0;      // 200ms
         this.maxIdleFrames = 30;      // ← ajuste conforme seus PNGs
         
         /* === ANIMAÇÃO WALK === */
@@ -107,7 +107,7 @@ export class Player extends Entity {
     
     updateVisualEffects(deltaTime) {
         // Brilho pulsante
-        this.glowIntensity += deltaTime * 2 * this.glowDirection;
+        this.glowIntensity += deltaTime * 1 * this.glowDirection;
         if (this.glowIntensity > 1) {
             this.glowIntensity = 1;
             this.glowDirection = -1;
@@ -119,7 +119,7 @@ export class Player extends Entity {
         // Partículas ao caminhar
         if (this.moving && Math.random() < 0.3) {
             this.particles.push({
-                x: this.x - 12 + Math.random() * 24,
+                x: this.x - 12 + Math.random() * 10,
                 y: this.y + 20,
                 life: 0.8,
                 maxLife: 0.8,

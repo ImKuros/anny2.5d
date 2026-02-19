@@ -1,7 +1,12 @@
 export class SpriteLoader {
-    constructor(basePath = 'assets/player/', chromaTolerance = 10) {
+    constructor(basePath = 'assets/player/', chromaOptions = {}) {
         this.basePath = basePath;
-        this.chromaTolerance = chromaTolerance;
+        // Opções de chroma key com a cor fornecida (#34d917 = RGB 52,217,23)
+        this.chroma = {
+            color: chromaOptions.color || { r: 52, g: 217, b: 23 }, // #34d917
+            tolerance: chromaOptions.tolerance || 30, // tolerância um pouco maior devido à variação
+            debug: chromaOptions.debug || false
+        };
         this.sprites = {
             idle: { n: [], s: [], e: [], w: [] },
             walk: { n: [], s: [], e: [], w: [] }
@@ -9,8 +14,8 @@ export class SpriteLoader {
         this.loaded = false;
     }
 
-    // Remove fundo verde (chroma key)
-    #removeGreenBackground(image, tolerance) {
+    // Remove fundo verde baseado na cor configurada
+    #removeGreenBackground(image) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = image.width;
@@ -20,19 +25,29 @@ export class SpriteLoader {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
+        // Debug: mostra a cor do primeiro pixel (canto superior esquerdo)
+        if (this.chroma.debug && data.length >= 4) {
+            console.log(`🔍 Primeiro pixel: r=${data[0]}, g=${data[1]}, b=${data[2]}`);
+        }
+
+        const { r: cr, g: cg, b: cb } = this.chroma.color;
+        const tolerance = this.chroma.tolerance;
+
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
 
-            // Verifica se é próximo do verde puro (0,255,0)
-            if (Math.abs(g - 255) <= tolerance && r <= tolerance && b <= tolerance) {
+            // Verifica se o pixel está próximo da cor chroma (dentro da tolerância)
+            if (Math.abs(r - cr) <= tolerance &&
+                Math.abs(g - cg) <= tolerance &&
+                Math.abs(b - cb) <= tolerance) {
                 data[i + 3] = 0; // alpha = 0 (transparente)
             }
         }
 
         ctx.putImageData(imageData, 0, 0);
-        return canvas; // retorna o canvas processado
+        return canvas;
     }
 
     async load() {
@@ -59,14 +74,13 @@ export class SpriteLoader {
         }
         
         this.loaded = true;
-        console.log('✅ [SPRITELOADER] PNGs carregados e processados: 2 estados × 4 direções');
+        console.log('✅ [SPRITELOADER] PNGs carregados e processados');
         this.diagnose();
     }
 
     loadFrame(state, direction, frame) {
         return new Promise((resolve) => {
-            // Monta o nome do arquivo no formato: "estado (número).png"
-            // Exemplo: "idle (1).png", "walk (2).png"
+            // Nome do arquivo no formato: "estado (número).png"
             const fileName = `${state} (${frame}).png`;
             const path = `${this.basePath}${state}/${direction}/${fileName}`;
             
@@ -78,7 +92,8 @@ export class SpriteLoader {
                     this.sprites[state][direction][frame - 1] = this.createFallback(state, direction, frame);
                 } else {
                     console.log(`✅ ${path} carregado, processando...`);
-                    const processed = this.#removeGreenBackground(img, this.chromaTolerance);
+                    // Processa a imagem removendo o fundo verde
+                    const processed = this.#removeGreenBackground(img);
                     this.sprites[state][direction][frame - 1] = processed;
                 }
                 resolve();
@@ -96,8 +111,8 @@ export class SpriteLoader {
 
     createFallback(state, direction, frame) {
         const canvas = document.createElement('canvas');
-        canvas.width = 34;
-        canvas.height = 54;
+        canvas.width = 124;
+        canvas.height = 194;
         const ctx = canvas.getContext('2d');
         
         const hue = { n: 0, s: 180, e: 60, w: 240 }[direction] || 0;
@@ -129,7 +144,8 @@ export class SpriteLoader {
     diagnose() {
         console.group('🔍 Diagnóstico — SpriteLoader');
         console.log('Base path:', this.basePath);
-        console.log('Chroma tolerance:', this.chromaTolerance);
+        console.log('Chroma color:', this.chroma.color);
+        console.log('Chroma tolerance:', this.chroma.tolerance);
         for (const state of ['idle', 'walk']) {
             for (const dir of ['n', 's', 'e', 'w']) {
                 const frames = this.sprites[state][dir];
